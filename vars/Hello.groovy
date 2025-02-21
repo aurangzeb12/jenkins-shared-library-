@@ -10,7 +10,7 @@ def call() {
             }
         }
 
-        stage{'New Stage'} {
+        stage('New Stage') {
             steps {
                 echo "Hello Date"
                 sh "date"
