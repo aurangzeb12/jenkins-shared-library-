@@ -17,6 +17,12 @@ def call() {
                 sh "hostname"
             }
         }
+
+        stage ('Shared Library work') {
+            steps {
+                echo 'This is coming Shared Library'
+            }
+        }
     }
 }
 }
