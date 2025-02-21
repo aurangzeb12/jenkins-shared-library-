@@ -1,7 +1,7 @@
 
 def call() {
     pipeline {
-    agent any { label "app-1"}
+    agent  { label "app-1"}
 
     stages {
         stage ('Hello') {
