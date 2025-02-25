@@ -1,6 +1,8 @@
 def call() {
     pipeline {    
-        agent any 
+        agent { 
+            docker { image 'maven:3.8.4-openjdk-17' }
+        } 
 
         environment {
             DOCKER_HUB_REPO = "techiescamp/jenkins-java-app"
@@ -8,43 +10,11 @@ def call() {
         }
 
         stages {
-            stage('Install Docker') {
-                steps {
-                    sh '''
-                        # Update package list and install prerequisites
-                        apt-get update
-                        apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
-
-                        # Add Docker's official GPG key
-                        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-                        
-                        # Set up the stable repository
-                        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
-                        
-                        # Install Docker Engine
-                        apt-get update
-                        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-                        
-                        # Verify Docker installation
-                        docker --version
-                        
-                        # Start Docker daemon in the foreground
-                        nohup dockerd > /var/log/dockerd.log 2>&1 &
-                        
-                        # Wait for Docker daemon to initialize
-                        sleep 10
-                        
-                        # Verify Docker is running
-                        docker info
-                    '''
-                }
-            }
-            
             stage('Checkout') {
                 steps {
                     checkout scmGit(
-                        branches: [[name: 'main']],
-                        extensions: [],
+                        branches: [[name: 'main']], 
+                        extensions: [], 
                         userRemoteConfigs: [[url: 'https://github.com/aurangzeb12/kube-petclinc-app.git']]
                     )
                 }
@@ -55,13 +25,21 @@ def call() {
                     sh 'mvn -B -Dmaven.repo.local=/root/.m2/repository clean install -DskipTests'
                 }
             }
-
-            stage('Build and Push Docker Image') {
+        
+            stage('Install Docker and Build Image') {
                 steps {
                     sh '''
-                        docker build -t my-first-maven-app:latest .
-                        docker tag my-first-maven-app:latest $DOCKER_HUB_REPO:$IMAGE_TAG
-                        docker push $DOCKER_HUB_REPO:$IMAGE_TAG
+                        # Download and extract Docker binary
+                        curl -fsSLO https://download.docker.com/linux/static/stable/x86_64/docker-27.3.1.tgz
+                        tar -xvf docker-27.3.1.tgz
+                        mv docker/docker /usr/local/bin/
+                        
+                        # Verify Docker installation
+                        docker --version
+                        docker info
+                        
+                        # Build Docker image
+                        DOCKER_BUILDKIT=0 docker build -t my-first-maven-app:latest .
                     '''
                 }
             }
