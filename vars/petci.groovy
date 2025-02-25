@@ -1,8 +1,6 @@
 def call() {
     pipeline {    
-        agent { 
-            docker { image "maven:3.8.4-openjdk-17" }
-        } 
+        agent any 
 
         environment {
             DOCKER_HUB_REPO = "techiescamp/jenkins-java-app"
@@ -18,7 +16,7 @@ def call() {
                         sh get-docker.sh
                         
                         # Move Docker binary to a standard location
-                        mv /usr/bin/docker /usr/local/bin/docker
+                        mv /usr/bin/docker /usr/local/bin/docker || true
                         
                         # Check Docker version to verify installation
                         docker --version
@@ -26,7 +24,7 @@ def call() {
                         # Start Docker daemon in the background
                         nohup dockerd > /var/log/dockerd.log 2>&1 &
                         
-                        # Wait for Docker to start
+                        # Wait for Docker daemon to initialize
                         sleep 10
                         
                         # Verify Docker is running
