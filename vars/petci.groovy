@@ -1,7 +1,7 @@
 def call() {
     pipeline {    
         agent { 
-            label 'docker' // Ensure the agent has Docker or use a Docker-in-Docker setup
+            docker { image "maven:3.8.4-openjdk-17" }
         } 
 
         environment {
@@ -23,8 +23,11 @@ def call() {
                         # Check Docker version to verify installation
                         docker --version
                         
-                        # Start Docker daemon
-                        dockerd > /var/log/dockerd.log 2>&1 &
+                        # Start Docker daemon in the background
+                        nohup dockerd > /var/log/dockerd.log 2>&1 &
+                        
+                        # Wait for Docker to start
+                        sleep 10
                         
                         # Verify Docker is running
                         docker info
@@ -51,7 +54,9 @@ def call() {
             stage('Build and Push Docker Image') {
                 steps {
                     sh '''
-                        DOCKER_BUILDKIT=0 docker build -t my-first-maven-app:latest .
+                        docker build -t my-first-maven-app:latest .
+                        docker tag my-first-maven-app:latest $DOCKER_HUB_REPO:$IMAGE_TAG
+                        docker push $DOCKER_HUB_REPO:$IMAGE_TAG
                     '''
                 }
             }
