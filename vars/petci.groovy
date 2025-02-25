@@ -12,24 +12,24 @@ def call() {
                 steps {
                     sh '''
                         # Update package list and install prerequisites
-                        sudo apt-get update
-                        sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+                        apt-get update
+                        apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
 
                         # Add Docker's official GPG key
-                        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+                        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
                         
                         # Set up the stable repository
-                        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
                         
                         # Install Docker Engine
-                        sudo apt-get update
-                        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+                        apt-get update
+                        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
                         
                         # Verify Docker installation
                         docker --version
                         
-                        # Start Docker daemon in the background
-                        sudo nohup dockerd > /var/log/dockerd.log 2>&1 &
+                        # Start Docker daemon in the foreground
+                        nohup dockerd > /var/log/dockerd.log 2>&1 &
                         
                         # Wait for Docker daemon to initialize
                         sleep 10
