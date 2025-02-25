@@ -1,7 +1,7 @@
 def call() {
     pipeline {    
         agent { 
-            docker { image "maven:3.8.4-openjdk-17" }
+            label 'docker' // Ensure the agent has Docker or use a Docker-in-Docker setup
         } 
 
         environment {
@@ -10,6 +10,28 @@ def call() {
         }
 
         stages {
+            stage('Install Docker') {
+                steps {
+                    sh '''
+                        # Install Docker
+                        curl -fsSL https://get.docker.com -o get-docker.sh
+                        sh get-docker.sh
+                        
+                        # Move Docker binary to a standard location
+                        mv /usr/bin/docker /usr/local/bin/docker
+                        
+                        # Check Docker version to verify installation
+                        docker --version
+                        
+                        # Start Docker daemon
+                        dockerd > /var/log/dockerd.log 2>&1 &
+                        
+                        # Verify Docker is running
+                        docker info
+                    '''
+                }
+            }
+            
             stage('Checkout') {
                 steps {
                     checkout scmGit(
@@ -29,17 +51,10 @@ def call() {
             stage('Build and Push Docker Image') {
                 steps {
                     sh '''
-                        curl -fsSLO https://download.docker.com/linux/static/stable/x86_64/docker-27.3.1.tgz;
-                        tar -xvf docker-27.3.1.tgz;
-                        mv docker/docker /usr/local/bin/;
-                        docker --version;
-                        docker info;
-                        pwd;
-                        ls -ltr;
                         DOCKER_BUILDKIT=0 docker build -t my-first-maven-app:latest .
                     '''
                 }
             }
         }
     }
-} // <-- Added this closing brace
+}
